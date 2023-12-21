@@ -78,7 +78,7 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('Doer-PPTHelper'),
+          title: const Text('Doer-Relaxer'),
         ),
         body: Column(children: [
           const HeaderWidget(),
@@ -346,6 +346,17 @@ class SpeechControlWidget extends StatelessWidget {
   var _time = 0; // 0.01초마다 1씩 증가시킬 정수형 변수
   var _isRunning = false; // 현재 시작 상태를 나타낼 불리언 변수
 
+  void _start() {
+    _timer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
+      _time++;
+    });
+  }
+
+  // 타이머 취소
+  void _pause() {
+    _timer?.cancel();
+  }
+
   // 시작 또는 일시정지 버튼 클릭
   void onClick() {
     _isRunning = !_isRunning; // 상태 반전
@@ -359,17 +370,6 @@ class SpeechControlWidget extends StatelessWidget {
   }
 
   // 타이머 시작 1/100초에 한 번씩 time 변수를 1증가
-
-  void _start() {
-    _timer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
-      _time++;
-    });
-  }
-
-  // 타이머 취소
-  void _pause() {
-    _timer?.cancel();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -394,6 +394,7 @@ class SpeechControlWidget extends StatelessWidget {
             )
           ],
         ),
+        const Text('발표 시간 : ', style: TextStyle(fontSize: 24)),
         Text('$sec.$hundredth', style: const TextStyle(fontSize: 24)),
       ],
     );
