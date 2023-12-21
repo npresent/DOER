@@ -78,7 +78,7 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('Relaxer'),
+          title: const Text('Doer-PPTHelper'),
         ),
         body: Column(children: [
           const HeaderWidget(),
@@ -329,9 +329,10 @@ class ErrorWidget extends StatelessWidget {
 }
 
 /// Controls to start and stop speech recognition
+// ignore: must_be_immutable
 class SpeechControlWidget extends StatelessWidget {
-  const SpeechControlWidget(this.hasSpeech, this.isListening,
-      this.startListening, this.stopListening, this.cancelListening,
+  SpeechControlWidget(this.hasSpeech, this.isListening, this.startListening,
+      this.stopListening, this.cancelListening,
       {super.key});
 
   final bool hasSpeech;
@@ -340,28 +341,68 @@ class SpeechControlWidget extends StatelessWidget {
   final void Function() stopListening;
   final void Function() cancelListening;
 
+  Timer? _timer; // 타이머
+
+  var _time = 0; // 0.01초마다 1씩 증가시킬 정수형 변수
+  var _isRunning = false; // 현재 시작 상태를 나타낼 불리언 변수
+
+  // 시작 또는 일시정지 버튼 클릭
+  void onClick() {
+    _isRunning = !_isRunning; // 상태 반전
+    if (_isRunning) {
+      _start();
+      startListening();
+    } else {
+      _pause();
+      stopListening();
+    }
+  }
+
+  // 타이머 시작 1/100초에 한 번씩 time 변수를 1증가
+
+  void _start() {
+    _timer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
+      _time++;
+    });
+  }
+
+  // 타이머 취소
+  void _pause() {
+    _timer?.cancel();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: <Widget>[
-        TextButton(
-          onPressed: !hasSpeech || isListening ? null : startListening,
-          child: const Text('Start'),
+    var sec = _time ~/ 100; //초
+    var hundredth = '${_time % 100}'.padLeft(2, '0'); // 1/100초
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: <Widget>[
+            TextButton(
+              onPressed: !hasSpeech || isListening ? null : onClick,
+              child: const Text('Start'),
+            ),
+            TextButton(
+              onPressed: isListening ? onClick : null,
+              child: const Text('Stop'),
+            ),
+            TextButton(
+              onPressed: isListening ? cancelListening : null,
+              child: const Text('Cancel'),
+            )
+          ],
         ),
-        TextButton(
-          onPressed: isListening ? stopListening : null,
-          child: const Text('Stop'),
-        ),
-        TextButton(
-          onPressed: isListening ? cancelListening : null,
-          child: const Text('Cancel'),
-        )
+        Text('$sec.$hundredth', style: const TextStyle(fontSize: 24)),
       ],
     );
   }
 }
 
+//i want to make timer
+@immutable
+// ignore: must_be_immutable
 class SessionOptionsWidget extends StatelessWidget {
   const SessionOptionsWidget(
       this.currentLocaleId,
@@ -400,16 +441,6 @@ class SessionOptionsWidget extends StatelessWidget {
                   width: 80,
                   child: TextFormField(
                     controller: pauseForController,
-                  )),
-              const Text('초'),
-              Container(
-                  padding: const EdgeInsets.only(left: 16),
-                  child: const Text('총 발표 시간: ')),
-              Container(
-                  padding: const EdgeInsets.only(left: 8),
-                  width: 80,
-                  child: TextFormField(
-                    controller: listenForController,
                   )),
               const Text('초'),
             ],
