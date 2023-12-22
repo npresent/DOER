@@ -14,9 +14,6 @@ class SpeechSampleApp extends StatefulWidget {
   State<SpeechSampleApp> createState() => _SpeechSampleAppState();
 }
 
-/// An example that demonstrates the basic functionality of the
-/// SpeechToText plugin for using the speech recognition capability
-/// of the underlying platform.
 class _SpeechSampleAppState extends State<SpeechSampleApp> {
   bool _hasSpeech = false;
   bool _logEvents = false;
@@ -34,16 +31,13 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
   String _currentLocaleId = '';
   List<LocaleName> _localeNames = [];
   final SpeechToText speech = SpeechToText();
+  var len = 0;
 
   @override
   void initState() {
     super.initState();
   }
 
-  /// This initializes SpeechToText. That only has to be done
-  /// once per application, though calling it again is harmless
-  /// it also does nothing. The UX of the sample app ensures that
-  /// it can only be called once.
   Future<void> initSpeechState() async {
     _logEvent('Initialize');
     try {
@@ -53,8 +47,6 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
         debugLogging: _logEvents,
       );
       if (hasSpeech) {
-        // Get the list of languages installed on the supporting platform so they
-        // can be displayed in the UI for selection by the user.
         _localeNames = await speech.locales();
 
         var systemLocale = await speech.systemLocale();
@@ -114,18 +106,12 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
     );
   }
 
-  // This is called each time the users wants to start a new speech
-  // recognition session
   void startListening() {
     _logEvent('start listening');
     lastWords = '';
     lastError = '';
     final pauseFor = int.tryParse(_pauseForController.text);
     final listenFor = int.tryParse(_listenForController.text);
-    // Note that `listenFor` is the maximum, not the minimum, on some
-    // systems recognition will be stopped before this value is reached.
-    // Similarly `pauseFor` is a maximum not a minimum and may be ignored
-    // on some devices.
     speech.listen(
       onResult: resultListener,
       listenFor: Duration(seconds: listenFor ?? 30),
@@ -156,12 +142,12 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
     });
   }
 
-  /// This callback is invoked each time new recognition results are
-  /// available after `listen` is called.
   void resultListener(SpeechRecognitionResult result) {
     _logEvent(
         'Result listener final: ${result.finalResult}, words: ${result.recognizedWords}');
     setState(() {
+      len = result.recognizedWords.length;
+
       lastWords = '${result.recognizedWords} - ${result.finalResult}';
     });
   }
@@ -169,7 +155,6 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
   void soundLevelListener(double level) {
     minSoundLevel = min(minSoundLevel, level);
     maxSoundLevel = max(maxSoundLevel, level);
-    // _logEvent('sound level $level: $minSoundLevel - $maxSoundLevel ');
     setState(() {
       this.level = level;
     });
@@ -218,7 +203,6 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
   }
 }
 
-/// Displays the most recently recognized words and the sound level.
 class RecognitionResultsWidget extends StatelessWidget {
   const RecognitionResultsWidget({
     super.key,
@@ -300,8 +284,6 @@ class HeaderWidget extends StatelessWidget {
   }
 }
 
-/// Display the current error status from the speech
-/// recognizer
 class ErrorWidget extends StatelessWidget {
   const ErrorWidget({
     super.key,
@@ -328,7 +310,6 @@ class ErrorWidget extends StatelessWidget {
   }
 }
 
-/// Controls to start and stop speech recognition
 // ignore: must_be_immutable
 class SpeechControlWidget extends StatelessWidget {
   SpeechControlWidget(this.hasSpeech, this.isListening, this.startListening,
@@ -341,10 +322,10 @@ class SpeechControlWidget extends StatelessWidget {
   final void Function() stopListening;
   final void Function() cancelListening;
 
-  Timer? _timer; // 타이머
+  Timer? _timer;
 
-  var _time = 0; // 0.01초마다 1씩 증가시킬 정수형 변수
-  var _isRunning = false; // 현재 시작 상태를 나타낼 불리언 변수
+  var _time = 0;
+  var _isRunning = false;
 
   void _start() {
     _timer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
@@ -352,14 +333,12 @@ class SpeechControlWidget extends StatelessWidget {
     });
   }
 
-  // 타이머 취소
   void _pause() {
     _timer?.cancel();
   }
 
-  // 시작 또는 일시정지 버튼 클릭
   void onClick() {
-    _isRunning = !_isRunning; // 상태 반전
+    _isRunning = !_isRunning;
     if (_isRunning) {
       _start();
       startListening();
@@ -369,12 +348,10 @@ class SpeechControlWidget extends StatelessWidget {
     }
   }
 
-  // 타이머 시작 1/100초에 한 번씩 time 변수를 1증가
-
   @override
   Widget build(BuildContext context) {
-    var sec = _time ~/ 100; //초
-    var hundredth = '${_time % 100}'.padLeft(2, '0'); // 1/100초
+    var sec = _time ~/ 100;
+    var hundredth = '${_time % 100}'.padLeft(2, '0');
     return Column(
       children: [
         Row(
@@ -401,8 +378,6 @@ class SpeechControlWidget extends StatelessWidget {
   }
 }
 
-//i want to make timer
-@immutable
 // ignore: must_be_immutable
 class SessionOptionsWidget extends StatelessWidget {
   const SessionOptionsWidget(
@@ -486,7 +461,6 @@ class InitSpeechWidget extends StatelessWidget {
   }
 }
 
-/// Display the current status of the listener
 class SpeechStatusWidget extends StatelessWidget {
   const SpeechStatusWidget({
     super.key,
